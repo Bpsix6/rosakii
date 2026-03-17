@@ -1,16 +1,1501 @@
-<!doctype html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta
-      name="description"
-      content="星野六樱的樱粉日系个人主页，通向博客、社媒与 GitHub 的多页式入口站。"
-    />
-    <title>星野六樱 · 樱夜书笺</title>
-  </head>
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
-  </body>
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>星野六桜 | Hoshino Rokuzakura</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@200;300;400;500;600;700;900&family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=Shippori+Mincho:wght@400;500;600;700;800&display=swap');
+
+/* ===== RESET & BASE ===== */
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+
+:root {
+  --sakura-100: #FFF5F7;
+  --sakura-200: #FFE4EC;
+  --sakura-300: #FFB8D0;
+  --sakura-400: #FF8FB3;
+  --sakura-500: #E8729A;
+  --sakura-600: #C4567E;
+  --sakura-700: #9B3D62;
+  --warm-cream: #FDF8F0;
+  --warm-cream2: #FAF0E6;
+  --ink: #3A2028;
+  --ink-light: #6B4A55;
+  --ink-lighter: #8C6B78;
+  --gold: #C9A96E;
+  --gold-light: #E0C992;
+  --shadow-sakura: rgba(200, 86, 126, 0.15);
+}
+
+html {
+  scroll-behavior: smooth;
+  overflow-x: hidden;
+  scrollbar-width: thin;
+  scrollbar-color: var(--sakura-400) var(--warm-cream);
+}
+html::-webkit-scrollbar { width: 8px; }
+html::-webkit-scrollbar-track { background: var(--warm-cream); }
+html::-webkit-scrollbar-thumb { background: var(--sakura-300); border-radius:4px; }
+
+body {
+  font-family: 'Shippori Mincho', 'Noto Serif JP', serif;
+  background: var(--warm-cream);
+  color: var(--ink);
+  cursor: none;
+  overflow-x: hidden;
+}
+
+/* ===== 自定义光标 ===== */
+.cursor-main {
+  width: 8px; height: 8px;
+  background: var(--sakura-500);
+  border-radius: 50%;
+  position: fixed;
+  pointer-events: none;
+  z-index: 99999;
+  transition: transform 0.1s ease, background 0.3s;
+  mix-blend-mode: normal;
+}
+.cursor-trail {
+  width: 36px; height: 36px;
+  border: 1.5px solid var(--sakura-400);
+  border-radius: 50%;
+  position: fixed;
+  pointer-events: none;
+  z-index: 99998;
+  transition: transform 0.25s cubic-bezier(0.23, 1, 0.32, 1),
+              width 0.3s, height 0.3s, border-color 0.3s;
+  transform: translate(-50%, -50%);
+}
+.cursor-trail.hovering {
+  width: 56px; height: 56px;
+  border-color: var(--sakura-500);
+  background: rgba(255, 143, 179, 0.08);
+}
+.cursor-petal {
+  position: fixed;
+  pointer-events: none;
+  z-index: 99997;
+  font-size: 14px;
+  opacity: 0;
+  transition: none;
+}
+
+@media (hover: none) {
+  .cursor-main, .cursor-trail { display: none; }
+  body { cursor: auto; }
+}
+
+/* ===== 加载画面 ===== */
+.loader {
+  position: fixed; inset:0;
+  background: var(--warm-cream);
+  z-index: 100000;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  transition: opacity 0.8s ease, visibility 0.8s;
+}
+.loader.hidden { opacity:0; visibility:hidden; }
+.loader-kanji {
+  font-family: 'Shippori Mincho', serif;
+  font-size: clamp(2.5rem, 6vw, 4.5rem);
+  font-weight: 700;
+  color: var(--ink);
+  letter-spacing: 0.3em;
+  overflow: hidden;
+}
+.loader-kanji span {
+  display: inline-block;
+  transform: translateY(100%);
+  animation: loaderReveal 0.6s cubic-bezier(0.23, 1, 0.32, 1) forwards;
+}
+.loader-kanji span:nth-child(1) { animation-delay: 0.1s; }
+.loader-kanji span:nth-child(2) { animation-delay: 0.2s; }
+.loader-kanji span:nth-child(3) { animation-delay: 0.3s; }
+.loader-kanji span:nth-child(4) { animation-delay: 0.4s; }
+@keyframes loaderReveal {
+  to { transform: translateY(0); }
+}
+.loader-line {
+  width: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--sakura-500), transparent);
+  margin-top: 1.5rem;
+  animation: loaderLine 1.5s 0.6s cubic-bezier(0.23, 1, 0.32, 1) forwards;
+}
+@keyframes loaderLine {
+  to { width: min(300px, 60vw); }
+}
+.loader-sub {
+  font-size: 0.75rem;
+  letter-spacing: 0.5em;
+  color: var(--ink-lighter);
+  margin-top: 1rem;
+  opacity: 0;
+  animation: fadeIn 0.8s 1s forwards;
+}
+@keyframes fadeIn { to { opacity:1; } }
+
+/* ===== 导航 ===== */
+.nav-wrapper {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  z-index: 9000;
+  padding: 1.2rem 2rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: background 0.4s, backdrop-filter 0.4s, padding 0.3s;
+}
+.nav-wrapper.scrolled {
+  background: rgba(253, 248, 240, 0.85);
+  backdrop-filter: blur(16px);
+  padding: 0.8rem 2rem;
+  box-shadow: 0 1px 20px rgba(200,86,126,0.06);
+}
+.nav-logo {
+  font-family: 'Shippori Mincho', serif;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--ink);
+  text-decoration: none;
+  letter-spacing: 0.15em;
+  transition: color 0.3s;
+}
+.nav-logo:hover { color: var(--sakura-500); }
+.nav-links {
+  display: flex;
+  gap: 2rem;
+  list-style: none;
+}
+.nav-links a {
+  font-size: 0.8rem;
+  color: var(--ink-light);
+  text-decoration: none;
+  letter-spacing: 0.2em;
+  position: relative;
+  padding-bottom: 4px;
+  transition: color 0.3s;
+}
+.nav-links a::after {
+  content: '';
+  position: absolute;
+  bottom: 0; left: 0;
+  width: 0; height: 1px;
+  background: var(--sakura-500);
+  transition: width 0.4s cubic-bezier(0.23, 1, 0.32, 1);
+}
+.nav-links a:hover { color: var(--sakura-500); }
+.nav-links a:hover::after { width: 100%; }
+
+.nav-toggle {
+  display: none;
+  background: none;
+  border: none;
+  width: 28px;
+  height: 20px;
+  position: relative;
+  cursor: none;
+}
+.nav-toggle span {
+  display: block;
+  width: 100%;
+  height: 1.5px;
+  background: var(--ink);
+  position: absolute;
+  left: 0;
+  transition: 0.3s;
+}
+.nav-toggle span:nth-child(1) { top: 0; }
+.nav-toggle span:nth-child(2) { top: 50%; transform: translateY(-50%); }
+.nav-toggle span:nth-child(3) { bottom: 0; }
+.nav-toggle.active span:nth-child(1) { top:50%; transform: translateY(-50%) rotate(45deg); }
+.nav-toggle.active span:nth-child(2) { opacity:0; }
+.nav-toggle.active span:nth-child(3) { bottom:50%; transform: translateY(50%) rotate(-45deg); }
+
+@media (max-width: 768px) {
+  .nav-toggle { display: block; }
+  .nav-links {
+    position: fixed;
+    top: 0; right: -100%;
+    width: 70vw;
+    max-width: 320px;
+    height: 100vh;
+    background: var(--warm-cream);
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 2.5rem;
+    transition: right 0.5s cubic-bezier(0.23, 1, 0.32, 1);
+    box-shadow: -10px 0 40px rgba(0,0,0,0.05);
+  }
+  .nav-links.open { right: 0; }
+  .nav-links a { font-size: 1rem; }
+}
+
+/* ===== 第一屏 — 书信 / 手帐风 ===== */
+.section-first {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(175deg, var(--warm-cream) 0%, var(--sakura-100) 50%, var(--warm-cream2) 100%);
+}
+
+/* 背景装饰纹样 — 和纸纹理 */
+.section-first::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image:
+    radial-gradient(circle at 20% 30%, rgba(255,184,208,0.15) 0%, transparent 50%),
+    radial-gradient(circle at 80% 70%, rgba(255,143,179,0.1) 0%, transparent 40%),
+    radial-gradient(circle at 50% 50%, rgba(201,169,110,0.05) 0%, transparent 60%);
+  pointer-events: none;
+}
+
+/* 装饰性格子线 */
+.grid-deco {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.04;
+}
+.grid-deco::before {
+  content: '';
+  position: absolute;
+  top: 0; bottom: 0;
+  left: 25%;
+  width: 1px;
+  background: var(--ink);
+}
+.grid-deco::after {
+  content: '';
+  position: absolute;
+  top: 0; bottom: 0;
+  right: 25%;
+  width: 1px;
+  background: var(--ink);
+}
+
+/* 信封 / 手帐卡片 */
+.letter-card {
+  position: relative;
+  width: min(88vw, 640px);
+  background: #FFFCF8;
+  border: 1px solid rgba(201,169,110,0.2);
+  padding: clamp(2.5rem, 6vw, 4.5rem);
+  box-shadow:
+    0 2px 4px rgba(0,0,0,0.02),
+    0 12px 40px rgba(200,86,126,0.06),
+    inset 0 0 80px rgba(253,248,240,0.5);
+  transform: rotate(-0.5deg);
+  transition: transform 0.6s cubic-bezier(0.23, 1, 0.32, 1), box-shadow 0.6s;
+}
+.letter-card:hover {
+  transform: rotate(0deg) translateY(-4px);
+  box-shadow:
+    0 4px 8px rgba(0,0,0,0.03),
+    0 20px 60px rgba(200,86,126,0.1),
+    inset 0 0 80px rgba(253,248,240,0.5);
+}
+
+/* 卡片角落装饰 */
+.corner { position: absolute; width: 32px; height: 32px; }
+.corner svg { width:100%; height:100%; }
+.corner--tl { top: 12px; left: 12px; }
+.corner--tr { top: 12px; right: 12px; transform: scaleX(-1); }
+.corner--bl { bottom: 12px; left: 12px; transform: scaleY(-1); }
+.corner--br { bottom: 12px; right: 12px; transform: scale(-1, -1); }
+
+/* 邮票装饰 */
+.stamp {
+  position: absolute;
+  top: clamp(1rem, 3vw, 2rem);
+  right: clamp(1rem, 3vw, 2rem);
+  width: 72px; height: 88px;
+  background: var(--sakura-100);
+  border: 2px dashed var(--sakura-300);
+  border-radius: 2px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 4px;
+  transform: rotate(3deg);
+  transition: transform 0.4s;
+}
+.stamp:hover { transform: rotate(0deg) scale(1.05); }
+.stamp-flower { font-size: 1.6rem; }
+.stamp-text {
+  font-size: 0.45rem;
+  letter-spacing: 0.15em;
+  color: var(--ink-lighter);
+}
+
+.letter-date {
+  font-size: 0.7rem;
+  color: var(--ink-lighter);
+  letter-spacing: 0.3em;
+  margin-bottom: 2rem;
+  font-style: italic;
+  font-family: 'Playfair Display', serif;
+}
+.letter-greeting {
+  font-size: 0.8rem;
+  color: var(--ink-light);
+  margin-bottom: 0.5rem;
+  letter-spacing: 0.2em;
+}
+.letter-name {
+  font-family: 'Shippori Mincho', serif;
+  font-size: clamp(2.4rem, 7vw, 4rem);
+  font-weight: 700;
+  color: var(--ink);
+  line-height: 1.3;
+  margin-bottom: 0.3rem;
+  letter-spacing: 0.08em;
+}
+.letter-name-en {
+  font-family: 'Playfair Display', serif;
+  font-size: clamp(0.8rem, 2vw, 1rem);
+  font-weight: 400;
+  font-style: italic;
+  color: var(--sakura-500);
+  letter-spacing: 0.25em;
+  margin-bottom: 2rem;
+}
+
+.letter-body {
+  font-size: clamp(0.85rem, 1.8vw, 0.95rem);
+  line-height: 2;
+  color: var(--ink-light);
+  margin-bottom: 2rem;
+  max-width: 480px;
+}
+.letter-body em {
+  color: var(--sakura-500);
+  font-style: normal;
+  border-bottom: 1px solid var(--sakura-200);
+}
+
+.letter-sign {
+  text-align: right;
+  font-family: 'Shippori Mincho', serif;
+  font-size: 1.1rem;
+  color: var(--ink);
+  letter-spacing: 0.2em;
+}
+.letter-sign-line {
+  display: block;
+  width: 60px;
+  height: 1px;
+  background: var(--sakura-300);
+  margin-left: auto;
+  margin-bottom: 0.5rem;
+}
+
+/* 浮动花瓣 */
+.floating-petals {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+.petal {
+  position: absolute;
+  opacity: 0;
+  animation: petalFall linear infinite;
+}
+.petal svg { width: 100%; height: 100%; }
+
+@keyframes petalFall {
+  0% { opacity: 0; transform: translate(0, -20px) rotate(0deg); }
+  10% { opacity: 0.7; }
+  90% { opacity: 0.5; }
+  100% { opacity: 0; transform: translate(var(--drift), calc(100vh + 20px)) rotate(var(--spin)); }
+}
+
+/* ===== 滚动分隔 ===== */
+.divider {
+  width: 100%;
+  padding: 3rem 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1.5rem;
+  opacity: 0.5;
+}
+.divider-line {
+  width: 80px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--sakura-300), transparent);
+}
+.divider-icon {
+  font-size: 0.9rem;
+  color: var(--sakura-400);
+}
+
+/* ===== 第二屏 — 关于 ===== */
+.section-about {
+  min-height: 100vh;
+  padding: clamp(4rem, 10vw, 8rem) clamp(1.5rem, 5vw, 4rem);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  background: var(--warm-cream);
+}
+
+.about-container {
+  max-width: 1100px;
+  width: 100%;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: clamp(2rem, 5vw, 5rem);
+  align-items: center;
+}
+
+/* 3D展示框 */
+.spline-frame {
+  position: relative;
+  aspect-ratio: 1 / 1.1;
+  max-width: 440px;
+  background: linear-gradient(145deg, #FFFCF8, var(--sakura-100));
+  border: 1px solid rgba(201,169,110,0.15);
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow:
+    0 8px 32px rgba(200,86,126,0.08),
+    inset 0 1px 0 rgba(255,255,255,0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 1rem;
+  transition: transform 0.5s cubic-bezier(0.23, 1, 0.32, 1), box-shadow 0.5s;
+}
+.spline-frame:hover {
+  transform: translateY(-6px) rotateX(2deg);
+  box-shadow: 0 16px 48px rgba(200,86,126,0.12);
+}
+.spline-frame iframe {
+  width: 100%;
+  /* 魔法在这里：让 iframe 比父容器高 62px，正好把底部水印挤出去 */
+  height: calc(100% + 62px); 
+  border: none;
+  position: absolute;
+  /* 删掉 inset: 0，改用 top 和 left 定位，确保它从顶部对齐向下延伸 */
+  top: 0;
+  left: 0;
+}
+.spline-placeholder {
+  text-align: center;
+  color: var(--ink-lighter);
+  font-size: 0.8rem;
+  letter-spacing: 0.1em;
+  padding: 2rem;
+}
+.spline-placeholder-icon {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+  display: block;
+  animation: float 3s ease-in-out infinite;
+}
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+.spline-placeholder-text {
+  font-size: 0.7rem;
+  color: var(--sakura-400);
+  margin-top: 0.5rem;
+}
+
+/* 关于文字 */
+.about-text { max-width: 480px; }
+.section-label {
+  font-size: 0.65rem;
+  letter-spacing: 0.5em;
+  color: var(--sakura-500);
+  text-transform: uppercase;
+  margin-bottom: 0.8rem;
+  font-family: 'Playfair Display', serif;
+}
+.section-title {
+  font-family: 'Shippori Mincho', serif;
+  font-size: clamp(1.8rem, 4vw, 2.6rem);
+  font-weight: 600;
+  color: var(--ink);
+  margin-bottom: 1.5rem;
+  line-height: 1.4;
+  letter-spacing: 0.05em;
+}
+.section-title .highlight {
+  color: var(--sakura-500);
+  position: relative;
+}
+.section-title .highlight::after {
+  content: '';
+  position: absolute;
+  bottom: 2px; left: 0;
+  width: 100%; height: 6px;
+  background: var(--sakura-200);
+  z-index: -1;
+  border-radius: 2px;
+}
+
+.about-description {
+  font-size: clamp(0.85rem, 1.6vw, 0.95rem);
+  line-height: 2.2;
+  color: var(--ink-light);
+  margin-bottom: 2rem;
+}
+
+/* 标签 */
+.tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 2rem;
+}
+.tag {
+  font-size: 0.7rem;
+  padding: 0.35rem 1rem;
+  border: 1px solid var(--sakura-300);
+  border-radius: 20px;
+  color: var(--sakura-600);
+  letter-spacing: 0.1em;
+  background: rgba(255,228,236,0.3);
+  transition: all 0.3s;
+  cursor: none;
+}
+.tag:hover {
+  background: var(--sakura-400);
+  color: white;
+  border-color: var(--sakura-400);
+  transform: translateY(-2px);
+}
+
+@media (max-width: 768px) {
+  .about-container {
+    grid-template-columns: 1fr;
+    text-align: center;
+  }
+  .spline-frame {
+    max-width: 100%;
+    aspect-ratio: 1 / 0.8;
+    order: -1;
+  }
+  .about-text { max-width: 100%; }
+  .tags { justify-content: center; }
+}
+
+/* ===== 第三屏 — 三个入口 ===== */
+.section-portals {
+  min-height: 100vh;
+  padding: clamp(4rem, 10vw, 8rem) clamp(1.5rem, 5vw, 4rem);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  background: linear-gradient(180deg, var(--warm-cream) 0%, var(--sakura-100) 100%);
+}
+
+.portals-header {
+  text-align: center;
+  margin-bottom: clamp(3rem, 6vw, 5rem);
+}
+
+.portals-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: clamp(1.5rem, 3vw, 2.5rem);
+  max-width: 1000px;
+  width: 100%;
+}
+
+/* 拟物卡片 */
+.portal-card {
+  position: relative;
+  background: #FFFCF8;
+  border: 1px solid rgba(201,169,110,0.15);
+  border-radius: 12px;
+  padding: clamp(2rem, 4vw, 3rem) clamp(1.5rem, 3vw, 2rem);
+  text-align: center;
+  text-decoration: none;
+  color: var(--ink);
+  cursor: none;
+  overflow: hidden;
+  transition: all 0.5s cubic-bezier(0.23, 1, 0.32, 1);
+  box-shadow:
+    0 1px 2px rgba(0,0,0,0.04),
+    0 4px 16px rgba(200,86,126,0.06),
+    inset 0 1px 0 rgba(255,255,255,0.9);
+  /* 3D */
+  transform-style: preserve-3d;
+  perspective: 800px;
+}
+.portal-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 12px;
+  background: linear-gradient(135deg, rgba(255,184,208,0.1), transparent 60%);
+  opacity: 0;
+  transition: opacity 0.5s;
+}
+.portal-card:hover::before { opacity: 1; }
+.portal-card:hover {
+  transform: translateY(-8px);
+  box-shadow:
+    0 4px 8px rgba(0,0,0,0.06),
+    0 20px 48px rgba(200,86,126,0.12),
+    inset 0 1px 0 rgba(255,255,255,0.9);
+}
+.portal-card:active {
+  transform: translateY(-2px) scale(0.98);
+}
+
+/* 拟物图标圆 */
+.portal-icon-wrap {
+  width: 80px; height: 80px;
+  margin: 0 auto 1.5rem;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  transition: transform 0.5s cubic-bezier(0.23, 1, 0.32, 1);
+}
+.portal-card:hover .portal-icon-wrap {
+  transform: scale(1.1) rotateZ(5deg);
+}
+
+/* 不同卡片不同配色 */
+.portal-card--blog .portal-icon-wrap {
+  background: linear-gradient(145deg, #FFF0F3, #FFD6E2);
+  box-shadow:
+    4px 4px 12px rgba(200,86,126,0.15),
+    -4px -4px 12px rgba(255,255,255,0.9),
+    inset 0 1px 2px rgba(255,255,255,0.6);
+}
+.portal-card--social .portal-icon-wrap {
+  background: linear-gradient(145deg, #F0F0FF, #DDD6FE);
+  box-shadow:
+    4px 4px 12px rgba(120,86,200,0.12),
+    -4px -4px 12px rgba(255,255,255,0.9),
+    inset 0 1px 2px rgba(255,255,255,0.6);
+}
+.portal-card--github .portal-icon-wrap {
+  background: linear-gradient(145deg, #F0F5F0, #D1E7D1);
+  box-shadow:
+    4px 4px 12px rgba(80,140,80,0.1),
+    -4px -4px 12px rgba(255,255,255,0.9),
+    inset 0 1px 2px rgba(255,255,255,0.6);
+}
+
+.portal-icon {
+  font-size: 2rem;
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));
+}
+
+.portal-title {
+  font-family: 'Shippori Mincho', serif;
+  font-size: 1.2rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+  letter-spacing: 0.1em;
+}
+.portal-subtitle {
+  font-family: 'Playfair Display', serif;
+  font-size: 0.65rem;
+  font-style: italic;
+  color: var(--sakura-500);
+  letter-spacing: 0.2em;
+  margin-bottom: 1rem;
+}
+.portal-desc {
+  font-size: 0.8rem;
+  color: var(--ink-lighter);
+  line-height: 1.8;
+  margin-bottom: 1.5rem;
+}
+
+.portal-arrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.7rem;
+  color: var(--sakura-500);
+  letter-spacing: 0.15em;
+  transition: gap 0.3s;
+}
+.portal-card:hover .portal-arrow { gap: 1rem; }
+.portal-arrow-line {
+  display: inline-block;
+  width: 24px; height: 1px;
+  background: var(--sakura-400);
+  transition: width 0.3s;
+}
+.portal-card:hover .portal-arrow-line { width: 40px; }
+
+@media (max-width: 768px) {
+  .portals-grid {
+    grid-template-columns: 1fr;
+    max-width: 400px;
+  }
+}
+
+/* ===== 第四屏 — Spline 3D 展示 ===== */
+.section-showcase {
+  min-height: 60vh;
+  padding: clamp(4rem, 10vw, 6rem) clamp(1.5rem, 5vw, 4rem);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: var(--warm-cream);
+  position: relative;
+}
+
+.showcase-frame {
+  width: min(90vw, 900px);
+  aspect-ratio: 16 / 9;
+  background: linear-gradient(145deg, #FFFCF8, var(--sakura-100));
+  border: 1px solid rgba(201,169,110,0.12);
+  border-radius: 12px;
+  overflow: hidden;
+  position: relative;
+  box-shadow:
+    0 8px 32px rgba(200,86,126,0.08),
+    0 1px 3px rgba(0,0,0,0.03);
+  margin-top: 2rem;
+}
+.showcase-frame iframe {
+  width: 100%; 
+  /* 同样增加 62px 高度来裁切水印 */
+  height: calc(100% + 62px); 
+  border: none;
+  position: absolute; 
+  top: 0;
+  left: 0;
+}
+.showcase-placeholder {
+  position: absolute; inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: var(--ink-lighter);
+}
+.showcase-placeholder-icon {
+  font-size: 4rem;
+  margin-bottom: 1rem;
+  animation: float 4s ease-in-out infinite;
+}
+.showcase-placeholder-title {
+  font-family: 'Shippori Mincho', serif;
+  font-size: 1.1rem;
+  margin-bottom: 0.5rem;
+  letter-spacing: 0.15em;
+}
+.showcase-placeholder-sub {
+  font-size: 0.7rem;
+  color: var(--sakura-400);
+  letter-spacing: 0.1em;
+}
+.showcase-placeholder-hint {
+  font-size: 0.6rem;
+  color: var(--ink-lighter);
+  margin-top: 1rem;
+  padding: 0.4rem 1rem;
+  border: 1px dashed var(--sakura-300);
+  border-radius: 4px;
+}
+
+/* ===== 第五屏 — Footer ===== */
+.footer {
+  padding: clamp(3rem, 8vw, 6rem) clamp(1.5rem, 5vw, 4rem) clamp(2rem, 4vw, 3rem);
+  background: linear-gradient(180deg, var(--warm-cream) 0%, var(--sakura-100) 100%);
+  text-align: center;
+  position: relative;
+}
+
+.footer-art {
+  font-size: clamp(3rem, 8vw, 6rem);
+  margin-bottom: 1.5rem;
+  display: inline-block;
+  animation: float 5s ease-in-out infinite;
+}
+
+.footer-name {
+  font-family: 'Shippori Mincho', serif;
+  font-size: clamp(1.4rem, 3vw, 2rem);
+  font-weight: 600;
+  letter-spacing: 0.2em;
+  margin-bottom: 0.5rem;
+}
+.footer-sub {
+  font-family: 'Playfair Display', serif;
+  font-size: 0.75rem;
+  font-style: italic;
+  color: var(--sakura-500);
+  letter-spacing: 0.3em;
+  margin-bottom: 2rem;
+}
+
+.footer-links {
+  display: flex;
+  justify-content: center;
+  gap: 2rem;
+  margin-bottom: 3rem;
+}
+.footer-link {
+  width: 44px; height: 44px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  font-size: 1.2rem;
+  background: #FFFCF8;
+  border: 1px solid var(--sakura-200);
+  box-shadow: 2px 2px 8px rgba(200,86,126,0.08), -2px -2px 8px rgba(255,255,255,0.9);
+  transition: all 0.3s;
+  cursor: none;
+}
+.footer-link:hover {
+  transform: translateY(-3px);
+  box-shadow: 3px 3px 12px rgba(200,86,126,0.15), -2px -2px 8px rgba(255,255,255,0.9);
+  background: var(--sakura-200);
+}
+
+.footer-haiku {
+  font-size: 0.8rem;
+  line-height: 2.5;
+  color: var(--ink-lighter);
+  letter-spacing: 0.3em;
+  margin-bottom: 2.5rem;
+  font-style: italic;
+}
+
+.footer-copy {
+  font-size: 0.65rem;
+  color: var(--ink-lighter);
+  letter-spacing: 0.15em;
+  padding-top: 1.5rem;
+  border-top: 1px solid rgba(201,169,110,0.1);
+}
+
+/* ===== 回到顶部 ===== */
+.back-to-top {
+  position: fixed;
+  bottom: 2rem; right: 2rem;
+  width: 44px; height: 44px;
+  border-radius: 50%;
+  background: #FFFCF8;
+  border: 1px solid var(--sakura-200);
+  box-shadow: 2px 2px 8px rgba(200,86,126,0.1), -2px -2px 8px white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  font-size: 1rem;
+  color: var(--sakura-500);
+  cursor: none;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(10px);
+  transition: all 0.4s;
+  z-index: 8000;
+}
+.back-to-top.visible {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+.back-to-top:hover {
+  transform: translateY(-3px);
+  box-shadow: 3px 3px 12px rgba(200,86,126,0.15), -2px -2px 8px white;
+}
+
+/* ===== 滚动动画通用 ===== */
+.reveal {
+  opacity: 0;
+  transform: translateY(40px);
+  transition: opacity 0.8s cubic-bezier(0.23, 1, 0.32, 1),
+              transform 0.8s cubic-bezier(0.23, 1, 0.32, 1);
+}
+.reveal.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+.reveal-delay-1 { transition-delay: 0.1s; }
+.reveal-delay-2 { transition-delay: 0.2s; }
+.reveal-delay-3 { transition-delay: 0.3s; }
+.reveal-delay-4 { transition-delay: 0.4s; }
+
+/* ===== 视差 ===== */
+.parallax-wrap { will-change: transform; }
+
+/* ===== 点击涟漪 ===== */
+.ripple {
+  position: fixed;
+  width: 0; height: 0;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255,143,179,0.3), transparent 70%);
+  pointer-events: none;
+  z-index: 99996;
+  animation: rippleAnim 0.8s ease-out forwards;
+}
+@keyframes rippleAnim {
+  to { width: 200px; height: 200px; opacity: 0; margin-left: -100px; margin-top: -100px; }
+}
+
+/* ===== 花瓣鼠标跟随 ===== */
+.trail-petal {
+  position: fixed;
+  pointer-events: none;
+  z-index: 99996;
+  font-size: 12px;
+  opacity: 0.6;
+  animation: trailFade 1s ease-out forwards;
+}
+@keyframes trailFade {
+  0% { opacity: 0.6; transform: translate(0,0) rotate(0deg) scale(1); }
+  100% { opacity: 0; transform: translate(var(--tx), var(--ty)) rotate(var(--tr)) scale(0.3); }
+}
+
+/* ===== 触屏花瓣爆炸 ===== */
+.touch-petal {
+  position: fixed;
+  pointer-events: none;
+  z-index: 99996;
+  font-size: 16px;
+  animation: touchBurst 1.2s ease-out forwards;
+}
+@keyframes touchBurst {
+  0% { opacity: 1; transform: translate(0,0) rotate(0deg) scale(1); }
+  100% { opacity: 0; transform: translate(var(--bx), var(--by)) rotate(var(--br)) scale(0.2); }
+}
+
+/* ===== 季节装饰 ===== */
+.deco-branch {
+  position: absolute;
+  top: -20px;
+  right: -30px;
+  font-size: 4rem;
+  transform: rotate(-30deg);
+  opacity: 0.15;
+  pointer-events: none;
+}
+
+/* ===== Card 3D tilt ===== */
+.tilt-3d {
+  transform-style: preserve-3d;
+  perspective: 1000px;
+}
+</style>
+</head>
+<body>
+
+<!-- 加载画面 -->
+<div class="loader" id="loader">
+  <div class="loader-kanji">
+    <span>星</span><span>野</span><span>六</span><span>桜</span>
+  </div>
+  <div class="loader-line"></div>
+  <div class="loader-sub">HOSHINO ROKUZAKURA</div>
+</div>
+
+<!-- 自定义光标 -->
+<div class="cursor-main" id="cursorMain"></div>
+<div class="cursor-trail" id="cursorTrail"></div>
+
+<!-- 导航 -->
+<nav class="nav-wrapper" id="nav">
+  <a href="#first" class="nav-logo hoverable">六桜</a>
+  <button class="nav-toggle hoverable" id="navToggle" aria-label="メニュー">
+    <span></span><span></span><span></span>
+  </button>
+  <ul class="nav-links" id="navLinks">
+    <li><a href="#about" class="hoverable">紹介</a></li>
+    <li><a href="#portals" class="hoverable">入口</a></li>
+    <li><a href="#showcase" class="hoverable">展示</a></li>
+    <li><a href="#footer" class="hoverable">終わり</a></li>
+  </ul>
+</nav>
+
+<!-- 回到顶部 -->
+<a href="#first" class="back-to-top hoverable" id="backToTop">↑</a>
+
+<!-- ====== 第一屏：信件 ====== -->
+<section class="section-first" id="first">
+  <div class="floating-petals" id="floatingPetals"></div>
+  <div class="grid-deco"></div>
+
+  <div class="letter-card parallax-wrap" id="letterCard">
+    <!-- 角装饰 -->
+    <div class="corner corner--tl">
+      <svg viewBox="0 0 32 32" fill="none">
+        <path d="M2 30 L2 2 L30 2" stroke="#C9A96E" stroke-width="0.7" stroke-linecap="round"/>
+        <circle cx="2" cy="2" r="1.5" fill="#E0C992"/>
+      </svg>
+    </div>
+    <div class="corner corner--tr">
+      <svg viewBox="0 0 32 32" fill="none">
+        <path d="M2 30 L2 2 L30 2" stroke="#C9A96E" stroke-width="0.7" stroke-linecap="round"/>
+        <circle cx="2" cy="2" r="1.5" fill="#E0C992"/>
+      </svg>
+    </div>
+    <div class="corner corner--bl">
+      <svg viewBox="0 0 32 32" fill="none">
+        <path d="M2 30 L2 2 L30 2" stroke="#C9A96E" stroke-width="0.7" stroke-linecap="round"/>
+        <circle cx="2" cy="2" r="1.5" fill="#E0C992"/>
+      </svg>
+    </div>
+    <div class="corner corner--br">
+      <svg viewBox="0 0 32 32" fill="none">
+        <path d="M2 30 L2 2 L30 2" stroke="#C9A96E" stroke-width="0.7" stroke-linecap="round"/>
+        <circle cx="2" cy="2" r="1.5" fill="#E0C992"/>
+      </svg>
+    </div>
+
+    <!-- 邮票 -->
+    <div class="stamp hoverable">
+      <span class="stamp-flower">🌸</span>
+      <span class="stamp-text">2025</span>
+    </div>
+
+    <div class="letter-date">— 2025, Spring —</div>
+    <div class="letter-greeting">ようこそ、ここは</div>
+    <h1 class="letter-name">星野六桜</h1>
+    <div class="letter-name-en">Hoshino Rokuzakura</div>
+
+    <p class="letter-body">
+      ここは私の小さな庭です。<br>
+      <em>言葉</em>を綴り、<em>コード</em>を紡ぎ、<br>
+      花びらのように散らばった想いを<br>
+      ひとつの場所に集めました。<br>
+      どうぞ、ゆっくりしていってください。
+    </p>
+
+    <div class="letter-sign">
+      <span class="letter-sign-line"></span>
+      六桜より
+    </div>
+  </div>
+</section>
+
+<!-- 分隔 -->
+<div class="divider">
+  <div class="divider-line"></div>
+  <div class="divider-icon">❀</div>
+  <div class="divider-line"></div>
+</div>
+
+<!-- ====== 第二屏：关于 ====== -->
+<section class="section-about" id="about">
+  <div class="about-container">
+    <div class="spline-frame tilt-3d reveal" id="splineFrameSmall">
+      <!-- 替换为你的 Spline iframe 或 spline-viewer -->
+      <iframe src="https://my.spline.design/processing-ixL0vjAHUDPvxHyB4VDEadHB/" loading="lazy"></iframe>
+    </div>
+
+    <div class="about-text">
+      <div class="section-label reveal">About</div>
+      <h2 class="section-title reveal reveal-delay-1">
+        花びらの中に、<br><span class="highlight">物語</span>がある
+      </h2>
+      <p class="about-description reveal reveal-delay-2">
+        星野六桜と申します。文章を書くこと、プログラミング、そして美しいものを集めることが好きです。このサイトは私の小さな居場所——ブログ、ソーシャルメディア、GitHubへの入り口を兼ねた、デジタルの庭園です。
+      </p>
+      <div class="tags reveal reveal-delay-3">
+        <span class="tag hoverable">文章</span>
+        <span class="tag hoverable">コード</span>
+        <span class="tag hoverable">デザイン</span>
+        <span class="tag hoverable">桜</span>
+        <span class="tag hoverable">日本語</span>
+        <span class="tag hoverable">写真</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 分隔 -->
+<div class="divider">
+  <div class="divider-line"></div>
+  <div class="divider-icon">✿</div>
+  <div class="divider-line"></div>
+</div>
+
+<!-- ====== 第三屏：三个入口 ====== -->
+<section class="section-portals" id="portals">
+  <div class="portals-header">
+    <div class="section-label reveal">Portals</div>
+    <h2 class="section-title reveal reveal-delay-1" style="text-align:center;">
+      三つの<span class="highlight">扉</span>
+    </h2>
+  </div>
+
+  <div class="portals-grid">
+    <!-- 博客 -->
+    <a href="#" class="portal-card portal-card--blog tilt-3d reveal reveal-delay-1 hoverable" target="_blank" rel="noopener">
+      <div class="portal-icon-wrap">
+        <span class="portal-icon">📖</span>
+      </div>
+      <h3 class="portal-title">ブログ</h3>
+      <div class="portal-subtitle">Blog</div>
+      <p class="portal-desc">
+        日々の想いや技術の記録を<br>ここに綴っています
+      </p>
+      <span class="portal-arrow">
+        読みに行く <span class="portal-arrow-line"></span> →
+      </span>
+    </a>
+
+    <!-- 社交媒体 -->
+    <a href="#" class="portal-card portal-card--social tilt-3d reveal reveal-delay-2 hoverable" target="_blank" rel="noopener">
+      <div class="portal-icon-wrap">
+        <span class="portal-icon">🦋</span>
+      </div>
+      <h3 class="portal-title">ソーシャル</h3>
+      <div class="portal-subtitle">Social</div>
+      <p class="portal-desc">
+        日常のかけらを<br>写真と共に発信中
+      </p>
+      <span class="portal-arrow">
+        見に行く <span class="portal-arrow-line"></span> →
+      </span>
+    </a>
+
+    <!-- GitHub -->
+    <a href="#" class="portal-card portal-card--github tilt-3d reveal reveal-delay-3 hoverable" target="_blank" rel="noopener">
+      <div class="portal-icon-wrap">
+        <span class="portal-icon">🌿</span>
+      </div>
+      <h3 class="portal-title">GitHub</h3>
+      <div class="portal-subtitle">Code Garden</div>
+      <p class="portal-desc">
+        オープンソースの<br>小さな庭園へようこそ
+      </p>
+      <span class="portal-arrow">
+        探しに行く <span class="portal-arrow-line"></span> →
+      </span>
+    </a>
+  </div>
+</section>
+
+<!-- 分隔 -->
+<div class="divider">
+  <div class="divider-line"></div>
+  <div class="divider-icon">🌸</div>
+  <div class="divider-line"></div>
+</div>
+
+<!-- ====== 第四屏：3D展示 ====== -->
+<section class="section-showcase" id="showcase">
+  <div class="section-label reveal">Showcase</div>
+  <h2 class="section-title reveal reveal-delay-1" style="text-align:center;">
+    小さな<span class="highlight">展示室</span>
+  </h2>
+
+  <div class="showcase-frame reveal reveal-delay-2">
+    <!-- 替换为你的 Spline iframe -->
+    <iframe src="https://my.spline.design/interactiveworkspace-a4Mndo7kXRIMh3Uw0hR4dR7Z/" loading="lazy"></iframe>
+</section>
+
+<!-- ====== Footer ====== -->
+<footer class="footer" id="footer">
+  <div class="footer-art">🌸</div>
+  <div class="footer-name reveal">星野六桜</div>
+  <div class="footer-sub reveal reveal-delay-1">Hoshino Rokuzakura</div>
+
+  <div class="footer-links reveal reveal-delay-2">
+    <a href="#" class="footer-link hoverable" title="Blog" target="_blank" rel="noopener">📖</a>
+    <a href="#" class="footer-link hoverable" title="Social" target="_blank" rel="noopener">🦋</a>
+    <a href="#" class="footer-link hoverable" title="GitHub" target="_blank" rel="noopener">🌿</a>
+    <a href="mailto:example@mail.com" class="footer-link hoverable" title="Email">✉️</a>
+  </div>
+
+  <div class="footer-haiku reveal reveal-delay-3">
+    花散りて<br>
+    なお風に舞う<br>
+    春の夢
+  </div>
+
+  <div class="footer-copy">
+    &copy; 2025 星野六桜 — 桜のように、静かに咲く
+  </div>
+</footer>
+
+
+<script>
+// ============================
+// 加载画面
+// ============================
+window.addEventListener('load', () => {
+  setTimeout(() => {
+    document.getElementById('loader').classList.add('hidden');
+  }, 2200);
+});
+
+// ============================
+// 自定义光标
+// ============================
+const cursorMain = document.getElementById('cursorMain');
+const cursorTrail = document.getElementById('cursorTrail');
+let mouseX = 0, mouseY = 0;
+let trailX = 0, trailY = 0;
+let lastPetalTime = 0;
+
+const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+
+if (!isTouchDevice) {
+  document.addEventListener('mousemove', (e) => {
+    mouseX = e.clientX;
+    mouseY = e.clientY;
+    cursorMain.style.left = mouseX - 4 + 'px';
+    cursorMain.style.top = mouseY - 4 + 'px';
+
+    // 鼠标花瓣轨迹
+    const now = Date.now();
+    if (now - lastPetalTime > 120) {
+      lastPetalTime = now;
+      createTrailPetal(mouseX, mouseY);
+    }
+  });
+
+  function animateTrail() {
+    trailX += (mouseX - trailX) * 0.15;
+    trailY += (mouseY - trailY) * 0.15;
+    cursorTrail.style.left = trailX + 'px';
+    cursorTrail.style.top = trailY + 'px';
+    requestAnimationFrame(animateTrail);
+  }
+  animateTrail();
+
+  // Hoverable
+  document.querySelectorAll('.hoverable').forEach(el => {
+    el.addEventListener('mouseenter', () => cursorTrail.classList.add('hovering'));
+    el.addEventListener('mouseleave', () => cursorTrail.classList.remove('hovering'));
+  });
+
+  // 点击涟漪
+  document.addEventListener('click', (e) => {
+    const ripple = document.createElement('div');
+    ripple.className = 'ripple';
+    ripple.style.left = e.clientX + 'px';
+    ripple.style.top = e.clientY + 'px';
+    document.body.appendChild(ripple);
+    setTimeout(() => ripple.remove(), 800);
+  });
+}
+
+function createTrailPetal(x, y) {
+  const petal = document.createElement('div');
+  petal.className = 'trail-petal';
+  const petals = ['🌸', '✿', '❀', '💮'];
+  petal.textContent = petals[Math.floor(Math.random() * petals.length)];
+  petal.style.left = x + 'px';
+  petal.style.top = y + 'px';
+  petal.style.setProperty('--tx', (Math.random() - 0.5) * 60 + 'px');
+  petal.style.setProperty('--ty', Math.random() * 40 + 20 + 'px');
+  petal.style.setProperty('--tr', (Math.random() - 0.5) * 180 + 'deg');
+  document.body.appendChild(petal);
+  setTimeout(() => petal.remove(), 1000);
+}
+
+// ============================
+// 触屏交互
+// ============================
+if (isTouchDevice) {
+  document.addEventListener('touchstart', (e) => {
+    const touch = e.touches[0];
+    // 花瓣爆炸
+    for (let i = 0; i < 6; i++) {
+      const p = document.createElement('div');
+      p.className = 'touch-petal';
+      const petals = ['🌸', '✿', '❀', '💮', '🎀'];
+      p.textContent = petals[Math.floor(Math.random() * petals.length)];
+      p.style.left = touch.clientX + 'px';
+      p.style.top = touch.clientY + 'px';
+      const angle = (Math.PI * 2 / 6) * i + Math.random() * 0.5;
+      const dist = 60 + Math.random() * 80;
+      p.style.setProperty('--bx', Math.cos(angle) * dist + 'px');
+      p.style.setProperty('--by', Math.sin(angle) * dist + 'px');
+      p.style.setProperty('--br', (Math.random() - 0.5) * 360 + 'deg');
+      document.body.appendChild(p);
+      setTimeout(() => p.remove(), 1200);
+    }
+  }, { passive: true });
+}
+
+// ============================
+// 浮动花瓣（第一屏）
+// ============================
+function createFloatingPetal() {
+  const container = document.getElementById('floatingPetals');
+  if (!container) return;
+  const petal = document.createElement('div');
+  petal.className = 'petal';
+
+  const size = 10 + Math.random() * 18;
+  petal.style.width = size + 'px';
+  petal.style.height = size + 'px';
+  petal.style.left = Math.random() * 100 + '%';
+  petal.style.top = '-30px';
+
+  const duration = 6 + Math.random() * 10;
+  const drift = (Math.random() - 0.5) * 200;
+  const spin = Math.random() * 720 - 360;
+  petal.style.setProperty('--drift', drift + 'px');
+  petal.style.setProperty('--spin', spin + 'deg');
+  petal.style.animationDuration = duration + 's';
+  petal.style.animationDelay = Math.random() * 3 + 's';
+
+  const hue = 340 + Math.random() * 20;
+  const sat = 60 + Math.random() * 30;
+  const light = 75 + Math.random() * 15;
+
+  petal.innerHTML = `<svg viewBox="0 0 20 20"><ellipse cx="10" cy="10" rx="8" ry="5" fill="hsla(${hue},${sat}%,${light}%,0.6)" transform="rotate(${Math.random()*360} 10 10)"/></svg>`;
+
+  container.appendChild(petal);
+  setTimeout(() => petal.remove(), (duration + 3) * 1000);
+}
+setInterval(createFloatingPetal, 600);
+for (let i = 0; i < 8; i++) setTimeout(createFloatingPetal, i * 200);
+
+// ============================
+// 导航
+// ============================
+const nav = document.getElementById('nav');
+const navToggle = document.getElementById('navToggle');
+const navLinks = document.getElementById('navLinks');
+
+navToggle.addEventListener('click', () => {
+  navToggle.classList.toggle('active');
+  navLinks.classList.toggle('open');
+});
+
+navLinks.querySelectorAll('a').forEach(a => {
+  a.addEventListener('click', () => {
+    navToggle.classList.remove('active');
+    navLinks.classList.remove('open');
+  });
+});
+
+// 滚动时导航样式
+window.addEventListener('scroll', () => {
+  if (window.scrollY > 60) {
+    nav.classList.add('scrolled');
+  } else {
+    nav.classList.remove('scrolled');
+  }
+}, { passive: true });
+
+// ============================
+// 回到顶部
+// ============================
+const backToTop = document.getElementById('backToTop');
+window.addEventListener('scroll', () => {
+  if (window.scrollY > window.innerHeight * 0.5) {
+    backToTop.classList.add('visible');
+  } else {
+    backToTop.classList.remove('visible');
+  }
+}, { passive: true });
+
+// ============================
+// 滚动揭示动画
+// ============================
+const revealEls = document.querySelectorAll('.reveal');
+const revealObserver = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      entry.target.classList.add('visible');
+    }
+  });
+}, { threshold: 0.1, rootMargin: '0px 0px -60px 0px' });
+revealEls.forEach(el => revealObserver.observe(el));
+
+// ============================
+// 3D 卡片倾斜效果
+// ============================
+if (!isTouchDevice) {
+  document.querySelectorAll('.tilt-3d').forEach(card => {
+    card.addEventListener('mousemove', (e) => {
+      const rect = card.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+      const centerX = rect.width / 2;
+      const centerY = rect.height / 2;
+      const rotateX = ((y - centerY) / centerY) * -8;
+      const rotateY = ((x - centerX) / centerX) * 8;
+      card.style.transform = `perspective(800px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) translateY(-4px)`;
+    });
+    card.addEventListener('mouseleave', () => {
+      card.style.transform = 'perspective(800px) rotateX(0) rotateY(0) translateY(0)';
+    });
+  });
+}
+
+// ============================
+// 信件卡片 视差
+// ============================
+const letterCard = document.getElementById('letterCard');
+if (!isTouchDevice && letterCard) {
+  document.querySelector('.section-first').addEventListener('mousemove', (e) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = (e.clientX - rect.left) / rect.width - 0.5;
+    const y = (e.clientY - rect.top) / rect.height - 0.5;
+    letterCard.style.transform = `rotate(${-0.5 + y * 1}deg) translate(${x * 12}px, ${y * 8}px)`;
+  });
+}
+
+// ============================
+// 平滑滚动视差
+// ============================
+let scrollY = 0;
+window.addEventListener('scroll', () => {
+  scrollY = window.pageYOffset;
+}, { passive: true });
+
+function parallaxLoop() {
+  const first = document.querySelector('.section-first');
+  if (first) {
+    const petals = document.getElementById('floatingPetals');
+    if (petals) {
+      petals.style.transform = `translateY(${scrollY * 0.15}px)`;
+    }
+  }
+  requestAnimationFrame(parallaxLoop);
+}
+parallaxLoop();
+
+// ============================
+// hoverable 的重新绑定（动态元素）
+// ============================
+const mutationObs = new MutationObserver(() => {
+  if (!isTouchDevice) {
+    document.querySelectorAll('.hoverable').forEach(el => {
+      if (!el.dataset.cursorBound) {
+        el.dataset.cursorBound = 'true';
+        el.addEventListener('mouseenter', () => cursorTrail.classList.add('hovering'));
+        el.addEventListener('mouseleave', () => cursorTrail.classList.remove('hovering'));
+      }
+    });
+  }
+});
+mutationObs.observe(document.body, { childList: true, subtree: true });
+
+</script>
+</body>
 </html>
